@@ -1,9 +1,15 @@
+
 from gluoncv import model_zoo
 from gluoncv.data.transforms.pose import (
     detector_to_simple_pose,
     detector_to_alpha_pose,
     heatmap_to_coord
 )
+import matplotlib.pyplot as plt
+import cv2
+import math
+import numpy as np
+from PIL import Image
 import mxnet as mx
 import time
 import gluoncv as gcv
@@ -31,8 +37,10 @@ detector.reset_class(["person"],
 detector.hybridize()
 pose_net.hybridize()
 
+anglelist = []
 
 cap = cv2.VideoCapture(0)
+# cap = cv2.VideoCapture("motion.mov")
 time.sleep(1)
 
 while(True):
@@ -41,7 +49,8 @@ while(True):
     k = cv2.waitKey(1)
     if k == ord('q'):
         break
-
+    
+    # frame = cv2.imread('./01.jpg')
     frame = mx.nd.array(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)).astype('uint8')
 
     x, img = gcv.data.transforms.presets.ssd.transform_test(
@@ -56,7 +65,7 @@ while(True):
 
     predicted_heatmap = pose_net(pose_input)
     pred_coords, confidence = heatmap_to_coord(predicted_heatmap, upscale_bbox)
-
+        
     pose_img = gcv.utils.viz.cv_plot_keypoints(img,
                                                pred_coords,
                                                confidence,
@@ -67,7 +76,20 @@ while(True):
                                                keypoint_thresh=0.2)
 
     cv2.imshow('pose_img', pose_img)
+    
+    #create vectors
+    ba = (pred_coords[0][7] - pred_coords[0][5]).asnumpy()
+    bc = (pred_coords[0][11]- pred_coords[0][5]).asnumpy()
+    
+    
+    angle = np.arccos(np.dot(bc, ba) / (np.linalg.norm(bc) * np.linalg.norm(ba))) 
+    angle = np.rad2deg(angle)
+    
+    anglelist.append(angle)
+    
+    print(angle)
 
+plt.hist(anglelist, bins = 36)
 
 cap.release()
 cv2.destroyAllWindows()
