@@ -13,6 +13,14 @@ from gluoncv.data.transforms.pose import (detector_to_alpha_pose,
 from gluoncv.utils import try_import_cv2
 from PIL import Image
 
+
+def angle_betweeen_two_vectors(v1: np.ndarray, v2: np.ndarray):
+    cos_theta = np.inner(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2))
+    theta = np.arccos(np.clip(cos_theta, -1.0, 1.0))
+    size_of_angle = np.rad2deg(theta)
+    return size_of_angle
+
+
 cv2 = try_import_cv2()
 
 detector = model_zoo.get_model(
@@ -37,20 +45,19 @@ pose_net.hybridize()
 
 anglelist = []
 
-<<<<<<< Updated upstream
-cap = cv2.VideoCapture(0)
-# cap = cv2.VideoCapture("motion.mov")
-=======
-filepath = "/Users/kamiyakoudai/MediaLab2/StretchAlarmSystem/stretch_01.MOV"
+filepath = "filepath"
 
 # cap = cv2.VideoCapture(0)
 cap = cv2.VideoCapture(filepath)
->>>>>>> Stashed changes
 time.sleep(1)
 
 while(True):
 
     ret, frame = cap.read()
+
+    if not ret:
+        break
+
     k = cv2.waitKey(1)
     if k == ord('q'):
         break
@@ -85,16 +92,14 @@ while(True):
     # create vectors
     ba = (pred_coords[0][7] - pred_coords[0][5]).asnumpy()
     bc = (pred_coords[0][11] - pred_coords[0][5]).asnumpy()
-
-    angle = np.arccos(
-        np.dot(bc, ba) / (np.linalg.norm(bc) * np.linalg.norm(ba)))
-    angle = np.rad2deg(angle)
-
+    angle = angle_betweeen_two_vectors(ba, bc)
     anglelist.append(angle)
-
     print(angle)
 
-plt.hist(anglelist, bins=36)
+print(anglelist)
 
 cap.release()
 cv2.destroyAllWindows()
+
+plt.hist(anglelist, bins=36)
+plt.show()
