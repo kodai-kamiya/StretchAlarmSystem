@@ -37,8 +37,15 @@ pose_net.hybridize()
 
 anglelist = []
 
+<<<<<<< Updated upstream
 cap = cv2.VideoCapture(0)
 # cap = cv2.VideoCapture("motion.mov")
+=======
+filepath = "/Users/kamiyakoudai/MediaLab2/StretchAlarmSystem/stretch_01.MOV"
+
+# cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(filepath)
+>>>>>>> Stashed changes
 time.sleep(1)
 
 while(True):
