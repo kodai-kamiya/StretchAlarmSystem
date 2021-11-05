@@ -43,9 +43,16 @@ detector.reset_class(["person"],
 detector.hybridize()
 pose_net.hybridize()
 
-anglelist = []
+anglelist_rightarm = []
+anglelist_lefttarm = []
+anglelist_rightleg = []
+anglelist_leftleg = []
+anglelist_rightelbow = []
+anglelist_leftelbow = []
 
-filepath = "filepath"
+
+
+filepath = "motion2.MOV"
 
 # cap = cv2.VideoCapture(0)
 cap = cv2.VideoCapture(filepath)
@@ -90,16 +97,64 @@ while(True):
     cv2.imshow('pose_img', pose_img)
 
     # create vectors
+    
     ba = (pred_coords[0][7] - pred_coords[0][5]).asnumpy()
     bc = (pred_coords[0][11] - pred_coords[0][5]).asnumpy()
     angle = angle_betweeen_two_vectors(ba, bc)
-    anglelist.append(angle)
-    print(angle)
+    anglelist_rightarm.append(angle)
+    
+    de = (pred_coords[0][8] - pred_coords[0][6]).asnumpy()
+    df = (pred_coords[0][12] - pred_coords[0][6]).asnumpy()
+    angle = angle_betweeen_two_vectors(de, df)
+    anglelist_lefttarm.append(angle)
+    
+    gh = (pred_coords[0][5] - pred_coords[0][11]).asnumpy()
+    gi = (pred_coords[0][13] - pred_coords[0][11]).asnumpy()
+    angle = angle_betweeen_two_vectors(gh, gi)
+    anglelist_rightleg.append(angle)
+    
+    jk = (pred_coords[0][6] - pred_coords[0][12]).asnumpy()
+    jl = (pred_coords[0][14] - pred_coords[0][12]).asnumpy()
+    angle = angle_betweeen_two_vectors(jk, jl)
+    anglelist_leftleg.append(angle)
+    
+    mn = (pred_coords[0][9] - pred_coords[0][7]).asnumpy()
+    mo = (pred_coords[0][5] - pred_coords[0][7]).asnumpy()
+    angle = angle_betweeen_two_vectors(mn, mo)
+    anglelist_rightelbow.append(angle)
 
-print(anglelist)
+    pq = (pred_coords[0][6] - pred_coords[0][8]).asnumpy()
+    pr = (pred_coords[0][10] - pred_coords[0][8]).asnumpy()
+    angle = angle_betweeen_two_vectors(pq, pr)
+    anglelist_leftelbow.append(angle)
+
 
 cap.release()
 cv2.destroyAllWindows()
 
-plt.hist(anglelist, bins=36)
+fig = plt.figure("histogram")
+
+ax1 = fig.add_subplot(2, 3, 1)
+ax1.set_title("Right Arm")
+ax2 = fig.add_subplot(2, 3, 2)
+ax2.set_title("left Arm")
+ax3 = fig.add_subplot(2, 3, 3)
+ax3.set_title("Right Leg")
+ax4 = fig.add_subplot(2, 3, 4)
+ax4.set_title("Left Leg")
+ax5 = fig.add_subplot(2, 3, 5)
+ax5.set_title("Right Elbow")
+ax6 = fig.add_subplot(2, 3, 6)
+ax6.set_title("Left Elbow")
+
+bins = np.linspace(0, 180, 36)
+
+ax1.hist(anglelist_rightarm, bins)
+ax2.hist(anglelist_lefttarm, bins)
+ax3.hist(anglelist_rightleg, bins)
+ax4.hist(anglelist_leftleg, bins)
+ax5.hist(anglelist_rightelbow, bins)
+ax6.hist(anglelist_leftelbow, bins)
+
+plt.tight_layout()
 plt.show()
