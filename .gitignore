@@ -129,4 +129,5 @@ dmypy.json
 .pyre/
 
 # movie file
-.mp4
+*.mp4
+*.MOV
