@@ -51,11 +51,10 @@ anglelist_rightelbow = []
 anglelist_leftelbow = []
 
 
+# filepath = "motion2.MOV"
 
-filepath = "motion2.MOV"
-
-# cap = cv2.VideoCapture(0)
-cap = cv2.VideoCapture(filepath)
+cap = cv2.VideoCapture(0)
+# cap = cv2.VideoCapture(filepath)
 time.sleep(1)
 
 while(True):
@@ -97,27 +96,27 @@ while(True):
     cv2.imshow('pose_img', pose_img)
 
     # create vectors
-    
+
     ba = (pred_coords[0][7] - pred_coords[0][5]).asnumpy()
     bc = (pred_coords[0][11] - pred_coords[0][5]).asnumpy()
     angle = angle_betweeen_two_vectors(ba, bc)
     anglelist_rightarm.append(angle)
-    
+
     de = (pred_coords[0][8] - pred_coords[0][6]).asnumpy()
     df = (pred_coords[0][12] - pred_coords[0][6]).asnumpy()
     angle = angle_betweeen_two_vectors(de, df)
     anglelist_lefttarm.append(angle)
-    
+
     gh = (pred_coords[0][5] - pred_coords[0][11]).asnumpy()
     gi = (pred_coords[0][13] - pred_coords[0][11]).asnumpy()
     angle = angle_betweeen_two_vectors(gh, gi)
     anglelist_rightleg.append(angle)
-    
+
     jk = (pred_coords[0][6] - pred_coords[0][12]).asnumpy()
     jl = (pred_coords[0][14] - pred_coords[0][12]).asnumpy()
     angle = angle_betweeen_two_vectors(jk, jl)
     anglelist_leftleg.append(angle)
-    
+
     mn = (pred_coords[0][9] - pred_coords[0][7]).asnumpy()
     mo = (pred_coords[0][5] - pred_coords[0][7]).asnumpy()
     angle = angle_betweeen_two_vectors(mn, mo)
@@ -158,3 +157,8 @@ ax6.hist(anglelist_leftelbow, bins)
 
 plt.tight_layout()
 plt.show()
+
+angles = np.stack((anglelist_rightarm, anglelist_lefttarm,
+                   anglelist_rightelbow, anglelist_leftelbow, anglelist_rightleg, anglelist_leftleg))
+
+np.savetxt('data.txt', angles.T, fmt='%.5e')
