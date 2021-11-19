@@ -153,7 +153,6 @@ while(True):
     
 if count > cap.get(cv2.CAP_PROP_FRAME_COUNT) * 0.4 : 
     print("あなたの姿勢は間違っています。")
-    continue
     
 else :
     print("あなたの姿勢は正しいです。")
