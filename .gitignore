@@ -131,3 +131,6 @@ dmypy.json
 # movie file
 *.mp4
 *.MOV
+
+# sound file
+*.mp3
