@@ -1,0 +1,155 @@
+.DateInput_input, .DateInput_input_1 {
+color: inherit !important;
+text-align: center;
+font-size: inherit ! important;
+Height: 100% !important;
+Width: 100% !important;
+padding-left: 3px !important;
+padding-right: 3px !important;
+}
+
+/* タイトルエリアの設定(画面上) */
+#title_area {
+/* display: table; */
+display: flex;
+align-items: center;
+/* text-align: center; */
+width: 100%;
+height: 100%;
+/* background-color: blue; */
+border: solid 1px black;
+}
+
+#text_cell {
+/* display: table-cell;
+vertical-align: middle; */
+font-size: 32px;
+font-weight: bold;
+/* text-align: center; */
+margin: 0 auto;
+/* background-color: rgba(255, 255, 255, 0.6); */
+}
+
+/* メインとなるエリアの設定(画面中央) */
+#alarm_area {
+/* width: 50%; */
+height: 100%;
+/* background-color: yellow; */
+border: solid 1px black;
+/* border-radius:10px; */
+}
+
+#alarm_area_container {
+  height: 100%;
+  /* background-color: yellow; */
+  width: 100%;
+}
+
+#one_comment_area_container{
+  height: 10%;
+  /* background-color: red; */
+  display: flex;
+  align-items: center;
+  text-align: center;
+}
+
+#one_comment_area{
+  font-size: 16px;
+  font-weight: bold;
+  margin: 0 auto;
+}
+
+#alarm_input_area_container {
+  height: 70%;
+  /* background-color: blue; */
+  width: 100%;
+}
+
+#date_msg_area {
+  text-align: center;
+  font-size: 18px;
+  font-weight: bold;
+  padding: 10px 0px 10px;
+}
+
+#date_input_area{
+  /* background-color: yellow; */
+  text-align: center;
+  width: 50%;
+  margin: 0 auto;
+}
+
+#time_msg_area{
+  text-align:center;
+  font-size:18px;
+  font-weight:bold;
+  padding: 10px 0px 10px;
+}
+
+#hour_and_minute_input_area {
+display: flex;
+align-items: center;
+/* background-color: yellow; */
+text-align: center;
+width: 60%;
+margin: 0 auto;
+}
+
+#colon_area{
+  font-size: 18px;
+  font-weight: bold;
+  width: 20px;
+}
+#hour-picker{
+  height: 100%;
+  width: 215px;
+}
+
+#minute-picker{
+  height: 100%;
+  width: 215px;
+}
+
+#button_area{
+  width: 30%;
+  /* background-color: yellow; */
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0px 10px;
+}
+
+#msg_area{
+  height: 20%;
+  /* background-color: green; */
+  width: 100%;
+}
+
+/* お手本画像エリアの設定(画面左下) */
+#image_area {
+/* width: 50%; */
+height: 100%;
+/* background-color: yellow; */
+border: solid 1px black;
+/* border-radius:10px; */
+}
+
+#image_container {
+text-align: center;
+width: 100%;
+height: 100%;
+}
+
+/* 動画エリアの設定(画面右下) */
+#video_area {
+/* width: 50%; */
+height: 100%;
+/* background-color: yellow; */
+border: solid 1px black;
+}
+
+#video_container {
+text-align: center;
+width: 100%;
+height: 100%;
+}
