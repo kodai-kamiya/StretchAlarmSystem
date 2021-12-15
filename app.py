@@ -17,11 +17,11 @@ from gluoncv.data.transforms.pose import (detector_to_alpha_pose,
                                           heatmap_to_coord)
 from gluoncv.utils import try_import_cv2
 from PIL import Image
-import dash_dangerously_set_inner_html
+# import dash_dangerously_set_inner_html
 from datetime import datetime as dt
 import datetime
-import plotly.express as px
-from jupyter_dash import JupyterDash
+# import plotly.express as px
+# from jupyter_dash import JupyterDash
 
 
 class VideoCamera(object):
@@ -124,6 +124,7 @@ for year in minute:
     minute_options.append({'label': str(year), 'value': year})
 
 alarm = ['']
+alarm_date = ['']
 
 external_stylesheets = [dbc.themes.BOOTSTRAP]
 
@@ -144,6 +145,11 @@ show_main =\
                                         id='one_comment_area')], id='one_comment_area_container'),
             html.Div(
                 children=[
+                    dcc.Interval(
+                        id='interval_component',
+                        interval=1*1000,  # in milliseconds
+                        n_intervals=0
+                    ),
                     html.Div('Date', id='date_msg_area'),
                     html.Div(
                         children=[
@@ -168,13 +174,16 @@ show_main =\
                     ], id='hour_and_minute_input_area'),
                     html.Div(children=[
                         dbc.Button("Set", outline=True,
-                                   color="primary", className="me-1"),
+                                   color="primary", className="me-1", id='set_button'),
                         dbc.Button("Stop", outline=True,
-                                   color="danger", className="me-1"),
+                                   color="danger", className="me-1", id='stop_button', disabled=True),
                     ], id='button_area')
 
                 ], id='alarm_input_area_container'),
-            html.Div('message area', id='msg_area'),
+            html.Div(children=[
+                html.Div(children=None, id='msg1'),
+                html.Div(children=None, id='msg2'),
+            ], id='msg_area'),
         ], id='alarm_area_container')
 
 show_image =\
@@ -185,12 +194,17 @@ show_image =\
         ], id='image_container'
     )
 
+# show_video =\
+#     html.Div(
+#         children=[
+#             html.Img(src="/video_feed", alt="video",
+#                      width="auto", height="100%")
+#         ], id='video_container'
+#     )
+
 show_video =\
     html.Div(
-        children=[
-            html.Img(src="/video_feed", alt="video",
-                     width="auto", height="100%")
-        ], id='video_container'
+        children=None, id='video_container'
     )
 
 
@@ -239,144 +253,190 @@ l2 = dbc.Container(
     fluid=True
 )
 
-l1 = dbc.Container(
-    [
-        dbc.Row(
-            [
-                dbc.Col(
-                    html.Div([
+# l1 = dbc.Container(
+#     [
+#         dbc.Row(
+#             [
+#                 dbc.Col(
+#                     html.Div([
 
-                        html.Button('Set', id='set-val', n_clicks=0),
-                        html.Div(id='my-output'),
-                        html.Div(id='live-update-text'),
-                        html.Div(id='live-update-text2'),
-                        html.Div(id='live-update-text3'),
+#                         html.Button('Set', id='set-val', n_clicks=0),
+#                         html.Div(id='my-output'),
+#                         html.Div(id='live-update-text'),
+#                         html.Div(id='live-update-text2'),
+#                         html.Div(id='live-update-text3'),
 
-                        dcc.Interval(
-                            id='interval-component',
-                            interval=1*1000,  # in milliseconds
-                            n_intervals=0
-                        )
-                    ]),
-                    # html.H1("タイトル"),
-                    style={"background-color": "pink"}
-                )
-            ],
-            style={"height": "30vh"}
-        ),
-        dbc.Row(
-            [
-                dbc.Col(
-                    html.Div([
-                        dbc.Row(
-                            [
-                                dbc.Col(
-                                    dcc.DatePickerSingle(
-                                        id='my-date-picker-single',
-                                        min_date_allowed=date(2021, 1, 1),
-                                        max_date_allowed=date(2022, 12, 31),
-                                        # initial_visible_month=date(2017, 8, 5),
-                                        # date=date(2021, 8, 25),
-                                        date=datetime.date.today(),
-                                        display_format='Y/M/D',)
-                                ),
-                                dbc.Col(dcc.Dropdown(
-                                    id='hour-picker', options=hour_options, value='1')),
-                                dbc.Col(dcc.Dropdown(
-                                    id='minute-picker', options=minute_options, value='1')),
+#                         dcc.Interval(
+#                             id='interval-component',
+#                             interval=1*1000,  # in milliseconds
+#                             n_intervals=0
+#                         )
+#                     ]),
+#                     # html.H1("タイトル"),
+#                     style={"background-color": "pink"}
+#                 )
+#             ],
+#             style={"height": "30vh"}
+#         ),
+#         dbc.Row(
+#             [
+#                 dbc.Col(
+#                     html.Div([
+#                         dbc.Row(
+#                             [
+#                                 dbc.Col(
+#                                     dcc.DatePickerSingle(
+#                                         id='my-date-picker-single',
+#                                         min_date_allowed=date(2021, 1, 1),
+#                                         max_date_allowed=date(2022, 12, 31),
+#                                         # initial_visible_month=date(2017, 8, 5),
+#                                         # date=date(2021, 8, 25),
+#                                         date=datetime.date.today(),
+#                                         display_format='Y/M/D',)
+#                                 ),
+#                                 dbc.Col(dcc.Dropdown(
+#                                     id='hour-picker', options=hour_options, value='1')),
+#                                 dbc.Col(dcc.Dropdown(
+#                                     id='minute-picker', options=minute_options, value='1')),
 
-                            ]),
+#                             ]),
 
-                    ]),
-                    # html.P("アラーム機能"),
-                    style={"height": "100%", "background-color": "red"}
-                )
-            ],
-            style={"height": "35vh"}
-        ),
-        dbc.Row(
-            [
-                dbc.Col(
-                    # html.P("お手本表示"),
-                    html.Img(src=app.get_asset_url('Lenna.png'),
-                             width="auto", height="100%"),
-                    width=6,
-                    style={"text-align": "center", "height": "100%",
-                           "background-color": "blue"}
-                ),
-                dbc.Col(children=[
-                    # html.P("カメラ画像表示"),
-                    html.Img(src="/video_feed", alt="video", width="auto", height="100%")],
-                    width=6,
-                    style={"display": "block",
-                           "text-align": "center", "height": "100%",
-                           "background-color": "cyan"}
-                )
-            ],
-            style={"height": "35vh"}
-        )
-    ],
-    fluid=True
-)
+#                     ]),
+#                     # html.P("アラーム機能"),
+#                     style={"height": "100%", "background-color": "red"}
+#                 )
+#             ],
+#             style={"height": "35vh"}
+#         ),
+#         dbc.Row(
+#             [
+#                 dbc.Col(
+#                     # html.P("お手本表示"),
+#                     html.Img(src=app.get_asset_url('Lenna.png'),
+#                              width="auto", height="100%"),
+#                     width=6,
+#                     style={"text-align": "center", "height": "100%",
+#                            "background-color": "blue"}
+#                 ),
+#                 dbc.Col(children=[
+#                     # html.P("カメラ画像表示"),
+#                     html.Img(src="/video_feed", alt="video", width="auto", height="100%")],
+#                     width=6,
+#                     style={"display": "block",
+#                            "text-align": "center", "height": "100%",
+#                            "background-color": "cyan"}
+#                 )
+#             ],
+#             style={"height": "35vh"}
+#         )
+#     ],
+#     fluid=True
+# )
 
 app.layout = l2
 
 
-@app.callback(Output('live-update-text', 'children'),
-              Input('interval-component', 'n_intervals'))
-def update_metrics(n):
-    today = dt.now()
-    if not alarm[0]:
-        return [html.Span('今は{0}年{1}月{2}日{3}時{4}分{5}秒です'.format(today.year, today.month, today.day, today.hour, today.minute, today.second))]
+@app.callback(Output('set_button', 'disabled'),
+              Output('stop_button', 'disabled'),
+              Output('msg1', 'children'),
+              Output('video_container', 'children'),
+              Input('set_button', 'n_clicks'),
+              Input('stop_button', 'n_clicks'),
+              State('my-date-picker-single', 'date'),
+              State('hour-picker', 'value'),
+              State('minute-picker', 'value'))
+def update_buttons(set_n, stop_n, date_value, hour_value, minute_value):
+    ctx = dash.callback_context
+    id = ctx.triggered[0]['prop_id'].split('.')[0]
+    if id == 'set_button':
+        time_str = date_value + "-"+str(hour_value)+"-"+str(minute_value)+"-0"
+        setted_time = dt.strptime(time_str, '%Y-%m-%d-%H-%M-%S')
+        current_time = dt.now()
+        if setted_time > current_time:
+            alarm_date[0] = setted_time.strftime('%Y-%m-%d-%H-%M-%S')
+            return True, False, 'You set alarm clock', html.Img(src="/video_feed", alt="video", width="auto", height="100%")
+        else:
+            return dash.no_update, dash.no_update, 'Please set again', dash.no_update
+    elif id == 'stop_button':
+        alarm_date[0] = ''
+        return False, True, 'You canceled alarm clock', None
     else:
-        print(alarm[0])
-        setted_time = dt.strptime(alarm[0], '%Y-%m-%d-%H-%M-%S')
-        if setted_time > today:
-            date_diff = setted_time - today
+        return dash.no_update, dash.no_update, dash.no_update, dash.no_update
+
+
+@app.callback(Output('msg2', 'children'),
+              Input('interval_component', 'n_intervals'))
+def update_msg(n):
+    today = dt.now()
+    if not alarm_date[0]:
+        # return '今は{0}年{1}月{2}日{3}時{4}分{5}秒です'.format(today.year, today.month, today.day, today.hour, today.minute, today.second)
+        return '{0}/{1}/{2} {3}:{4}:{5}'.format(today.year, today.month, today.day, today.hour, today.minute, today.second)
+    else:
+        alarm_time = dt.strptime(alarm_date[0], '%Y-%m-%d-%H-%M-%S')
+        if alarm_time > today:
+            date_diff = alarm_time - today
             hours, tminute = divmod(date_diff.seconds, 3600)
             minutes, seconds = divmod(tminute, 60)
-            return [html.Span('アラームまであと{0}日{1}時間{2}分{3}秒です'.format(date_diff.days, hours, minutes, seconds)),
-                    html.Button('stop', id='alarm-count-stop-val', n_clicks=0)]
+            return '{0}days {1}:{2}:{3}'.format(date_diff.days, hours, minutes, seconds)
         else:
-            return [html.Span('アラームがなっています'), html.Button('stop', id='alarming-stop-val', n_clicks=0)]
+            return 'Alarming'
 
 
-@app.callback(Output('live-update-text2', 'children'),
-              Input('alarm-count-stop-val', 'n_clicks'))
-def alarm_cancel(n):
-    if n > 0:
-        print("alarm_cancel")
-        alarm[0] = ''
-        # return {'display': 'none'}
-        return [html.Span('アラームをキャンセルしました')]
+# @app.callback(Output('live-update-text', 'children'),
+#               Input('interval-component', 'n_intervals'))
+# def update_metrics(n):
+#     today = dt.now()
+#     if not alarm[0]:
+#         return [html.Span('今は{0}年{1}月{2}日{3}時{4}分{5}秒です'.format(today.year, today.month, today.day, today.hour, today.minute, today.second))]
+#     else:
+#         print(alarm[0])
+#         setted_time = dt.strptime(alarm[0], '%Y-%m-%d-%H-%M-%S')
+#         if setted_time > today:
+#             date_diff = setted_time - today
+#             hours, tminute = divmod(date_diff.seconds, 3600)
+#             minutes, seconds = divmod(tminute, 60)
+#             return [html.Span('アラームまであと{0}日{1}時間{2}分{3}秒です'.format(date_diff.days, hours, minutes, seconds)),
+#                     html.Button('stop', id='alarm-count-stop-val', n_clicks=0)]
+#         else:
+#             return [html.Span('アラームがなっています'), html.Button('stop', id='alarming-stop-val', n_clicks=0)]
 
 
-@app.callback(Output('live-update-text3', 'children'),
-              Input('alarming-stop-val', 'n_clicks'))
-def alarm_stop(n):
-    if n > 0:
-        print("alarm_stop")
-        alarm[0] = ''
-        return [html.Span('アラームを停止しました')]
+# @app.callback(Output('live-update-text2', 'children'),
+#               Input('alarm-count-stop-val', 'n_clicks'))
+# def alarm_cancel(n):
+#     if n > 0:
+#         print("alarm_cancel")
+#         alarm[0] = ''
+#         # return {'display': 'none'}
+#         return [html.Span('アラームをキャンセルしました')]
 
 
-@app.callback(
-    Output(component_id='my-output', component_property='children'),
-    [Input('set-val', 'n_clicks')],
-    [State('my-date-picker-single', 'date'),
-     State('hour-picker', 'value'),
-     State('minute-picker', 'value')]
-)
-def update_output(n_clicks, date_value, hour_value, minute_value):
-    if n_clicks > 0:
-        time_str = date_value + "-"+str(hour_value)+"-"+str(minute_value)+"-0"
+# @app.callback(Output('live-update-text3', 'children'),
+#               Input('alarming-stop-val', 'n_clicks'))
+# def alarm_stop(n):
+#     if n > 0:
+#         print("alarm_stop")
+#         alarm[0] = ''
+#         return [html.Span('アラームを停止しました')]
 
-        setted_time = dt.strptime(time_str, '%Y-%m-%d-%H-%M-%S')
-        if setted_time < dt.today():
-            return '未来の時間を入力してください'
-        else:
-            alarm[0] = setted_time.strftime('%Y-%m-%d-%H-%M-%S')
-            return '{0}年{1}月{2}日の{3}時{4}分にアラームをセットしました'.format(setted_time.year, setted_time.month, setted_time.day, setted_time.hour, setted_time.minute)
+
+# @app.callback(
+#     Output(component_id='my-output', component_property='children'),
+#     [Input('set-val', 'n_clicks')],
+#     [State('my-date-picker-single', 'date'),
+#      State('hour-picker', 'value'),
+#      State('minute-picker', 'value')]
+# )
+# def update_output(n_clicks, date_value, hour_value, minute_value):
+#     if n_clicks > 0:
+#         time_str = date_value + "-"+str(hour_value)+"-"+str(minute_value)+"-0"
+
+#         setted_time = dt.strptime(time_str, '%Y-%m-%d-%H-%M-%S')
+#         if setted_time < dt.today():
+#             return '未来の時間を入力してください'
+#         else:
+#             alarm[0] = setted_time.strftime('%Y-%m-%d-%H-%M-%S')
+#             return '{0}年{1}月{2}日の{3}時{4}分にアラームをセットしました'.format(setted_time.year, setted_time.month, setted_time.day, setted_time.hour, setted_time.minute)
 
 
 if __name__ == '__main__':
