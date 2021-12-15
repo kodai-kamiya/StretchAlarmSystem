@@ -1,4 +1,6 @@
 import dash
+import time
+import datetime
 from dash import Dash, dcc, html, Input, Output, State
 from datetime import date, time
 import dash_core_components as dcc
@@ -17,21 +19,19 @@ from gluoncv.data.transforms.pose import (detector_to_alpha_pose,
                                           heatmap_to_coord)
 from gluoncv.utils import try_import_cv2
 from PIL import Image
-import dash_dangerously_set_inner_html
 from datetime import datetime as dt
 import datetime
 import plotly.express as px
-from jupyter_dash import JupyterDash
 
 
 class VideoCamera(object):
     def __init__(self):
         # capture from video file
-        # filename = "filepath"
-        # self.video = cv2.VideoCapture(filename)
+        filename = "motion.mov"
+        self.video = cv2.VideoCapture(filename)
 
         # capture from webcam
-        self.video = cv2.VideoCapture(0)
+        # self.video = cv2.VideoCapture(0)
 
         self.detector = model_zoo.get_model(
             'ssd_512_mobilenet1.0_voc',
@@ -102,6 +102,8 @@ class VideoCamera(object):
                                                    keypoint_thresh=0.2)
         return pose_img
 
+
+cv2 = try_import_cv2()
 
 def gen(camera):
     while True:
@@ -319,7 +321,7 @@ l1 = dbc.Container(
     fluid=True
 )
 
-app.layout = l2
+app.layout = l1
 
 
 @app.callback(Output('live-update-text', 'children'),
@@ -329,7 +331,6 @@ def update_metrics(n):
     if not alarm[0]:
         return [html.Span('今は{0}年{1}月{2}日{3}時{4}分{5}秒です'.format(today.year, today.month, today.day, today.hour, today.minute, today.second))]
     else:
-        print(alarm[0])
         setted_time = dt.strptime(alarm[0], '%Y-%m-%d-%H-%M-%S')
         if setted_time > today:
             date_diff = setted_time - today
@@ -337,8 +338,8 @@ def update_metrics(n):
             minutes, seconds = divmod(tminute, 60)
             return [html.Span('アラームまであと{0}日{1}時間{2}分{3}秒です'.format(date_diff.days, hours, minutes, seconds)),
                     html.Button('stop', id='alarm-count-stop-val', n_clicks=0)]
-        else:
-            return [html.Span('アラームがなっています'), html.Button('stop', id='alarming-stop-val', n_clicks=0)]
+        else:return [html.Div(children=[html.Audio(html.Source(src=f"https://www.ne.jp/asahi/music/myuu/wave/loop1.wav", type="audio/wav"), loop=True, autoPlay=True, preload='auto')]),
+                    html.Button('stop', id='alarming-stop-val', n_clicks=0)]
 
 
 @app.callback(Output('live-update-text2', 'children'),

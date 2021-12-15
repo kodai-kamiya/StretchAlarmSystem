@@ -13,13 +13,11 @@ from gluoncv.data.transforms.pose import (detector_to_alpha_pose,
 from gluoncv.utils import try_import_cv2
 from PIL import Image
 
-
 def angle_betweeen_two_vectors(v1: np.ndarray, v2: np.ndarray):
     cos_theta = np.inner(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2))
     theta = np.arccos(np.clip(cos_theta, -1.0, 1.0))
     size_of_angle = np.rad2deg(theta)
     return size_of_angle
-
 
 cv2 = try_import_cv2()
 
@@ -213,5 +211,3 @@ plt.show()
 
 angles = np.stack((anglelist_rightarm, anglelist_leftarm,
                    anglelist_rightelbow, anglelist_leftelbow, anglelist_rightleg, anglelist_leftleg))
-
-np.savetxt('data.txt', angles.T, fmt='%.5e')
