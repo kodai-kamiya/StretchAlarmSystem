@@ -1,5 +1,9 @@
 import dash
-from dash import Dash, dcc, html, Input, Output, State
+from dash import Dash, dcc, html
+from dash.exceptions import PreventUpdate
+from dash.html.A import A
+from dash.html.B import B  # , Input, Output, State
+from dash_extensions.enrich import DashProxy, MultiplexerTransform, Input, Output, State
 from datetime import date, time
 import dash_core_components as dcc
 import dash_bootstrap_components as dbc
@@ -20,12 +24,15 @@ from PIL import Image
 # import dash_dangerously_set_inner_html
 from datetime import datetime as dt
 import datetime
+
+# from a import example
 # import plotly.express as px
 # from jupyter_dash import JupyterDash
 
 
 class VideoCamera(object):
     def __init__(self):
+        print('instanced')
         # capture from video file
         # filename = "filepath"
         # self.video = cv2.VideoCapture(filename)
@@ -52,7 +59,18 @@ class VideoCamera(object):
         self.pose_net.hybridize()
 
     def __del__(self):
+        print('I\'ll die')
         self.video.release()
+        # del self.video
+        # cv2.destroyAllWindows()
+
+    def stop_camera(self):
+        print('camera stopped')
+        self.video.release()
+
+    def start_camera(self):
+        print('camera restart')
+        self.video.open(0)
 
     def get_frame(self):
         while(True):
@@ -111,8 +129,19 @@ def gen(camera):
 
 
 server = Flask(__name__)
-app = dash.Dash(__name__, server=server,
-                external_stylesheets=[dbc.themes.BOOTSTRAP])
+# app = dash.Dash(__name__, server=server,
+#                 external_stylesheets=[dbc.themes.BOOTSTRAP])
+
+
+app = DashProxy(__name__, server=server,
+                prevent_initial_callbacks=True,
+                suppress_callback_exceptions=True,
+                external_stylesheets=[dbc.themes.BOOTSTRAP],
+                # meta_tags=[{"name": "viewport",
+                #             "content": "width=device-width, initial-scale=1"}],
+                transforms=[MultiplexerTransform(proxy_location=None)]
+                )
+
 hour = list(range(0, 24))
 hour_options = []
 for year in hour:
@@ -123,20 +152,50 @@ minute_options = []
 for year in minute:
     minute_options.append({'label': str(year), 'value': year})
 
-alarm = ['']
-alarm_date = ['']
+# alarm = ['']
+# alarm_dates = []
+alarm_date = None
 
-external_stylesheets = [dbc.themes.BOOTSTRAP]
+is_alarm_stopped = False
+# x = VideoCamera()
+
+# camera_objects = []
+camera_object = None
 
 
 @server.route('/video_feed')
 def video_feed():
-    return Response(gen(VideoCamera()),
+    return Response(gen(camera_object),
                     mimetype='multipart/x-mixed-replace; boundary=frame')
+    # return Response(gen(camera_objects[0]),
+    #                 mimetype='multipart/x-mixed-replace; boundary=frame')
 
 
 show_text =\
     html.Div('Stretching Alarm Clock', id='text_cell')
+
+set_button = dbc.Button("Set", outline=True, color="primary",
+                        className="me-1", id='set_button')
+
+# stop_button = dbc.Button("Stop", outline=True,
+#                          color="danger", className="me-1", id='stop_button')
+stop_button = dbc.Button("Stop", outline=True,
+                         color="danger", className="me-1", id='stop_button', href='/stretch')
+
+# cancel_button = dbc.Button("Cancel", outline=True,
+#                            color="danger", className="me-1", id='cancel_button', href='/stretch')
+cancel_button = dbc.Button("Cancel", outline=True,
+                           color="danger", className="me-1", id='cancel_button')
+
+test_button = dbc.Button("test", outline=True,
+                         color="danger", className="me-1", id='test_button')
+
+# back_button = [dbc.Button("back", outline=True,
+#                           color="danger", className="me-1", id='back_button', href='/'),
+#                dbc.Button("start", outline=True,
+#                           color="primary", className="me-1", id='video_start_button'),
+#                dbc.Button("stop", outline=True,
+#                color="danger", className="me-1", id='video_stop_button')]
 
 show_main =\
     html.Div(
@@ -173,10 +232,9 @@ show_main =\
                             id='minute-picker', options=minute_options, value='0')
                     ], id='hour_and_minute_input_area'),
                     html.Div(children=[
-                        dbc.Button("Set", outline=True,
-                                   color="primary", className="me-1", id='set_button'),
-                        dbc.Button("Stop", outline=True,
-                                   color="danger", className="me-1", id='stop_button', disabled=True),
+                        # html.Div(children=set_button, id='example'),
+                        set_button,
+                        # stop_button,
                     ], id='button_area')
 
                 ], id='alarm_input_area_container'),
@@ -205,6 +263,11 @@ show_image =\
 show_video =\
     html.Div(
         children=None, id='video_container'
+    )
+
+show_video2 =\
+    html.Div(
+        children=None, id='video_container2'
     )
 
 
@@ -253,190 +316,207 @@ l2 = dbc.Container(
     fluid=True
 )
 
-# l1 = dbc.Container(
-#     [
-#         dbc.Row(
-#             [
-#                 dbc.Col(
-#                     html.Div([
+stretch_layer_buttons =\
+    [dbc.Button("back", outline=True,
+                color="danger", className="me-1", id='back_button', href='/'),
+     dbc.Button("start", outline=True,
+                color="primary", className="me-1", id='video_start_button'),
+     dbc.Button("stop", outline=True,
+                color="danger", className="me-1", id='video_stop_button'), test_button]
 
-#                         html.Button('Set', id='set-val', n_clicks=0),
-#                         html.Div(id='my-output'),
-#                         html.Div(id='live-update-text'),
-#                         html.Div(id='live-update-text2'),
-#                         html.Div(id='live-update-text3'),
-
-#                         dcc.Interval(
-#                             id='interval-component',
-#                             interval=1*1000,  # in milliseconds
-#                             n_intervals=0
-#                         )
-#                     ]),
-#                     # html.H1("タイトル"),
-#                     style={"background-color": "pink"}
-#                 )
-#             ],
-#             style={"height": "30vh"}
-#         ),
-#         dbc.Row(
-#             [
-#                 dbc.Col(
-#                     html.Div([
-#                         dbc.Row(
-#                             [
-#                                 dbc.Col(
-#                                     dcc.DatePickerSingle(
-#                                         id='my-date-picker-single',
-#                                         min_date_allowed=date(2021, 1, 1),
-#                                         max_date_allowed=date(2022, 12, 31),
-#                                         # initial_visible_month=date(2017, 8, 5),
-#                                         # date=date(2021, 8, 25),
-#                                         date=datetime.date.today(),
-#                                         display_format='Y/M/D',)
-#                                 ),
-#                                 dbc.Col(dcc.Dropdown(
-#                                     id='hour-picker', options=hour_options, value='1')),
-#                                 dbc.Col(dcc.Dropdown(
-#                                     id='minute-picker', options=minute_options, value='1')),
-
-#                             ]),
-
-#                     ]),
-#                     # html.P("アラーム機能"),
-#                     style={"height": "100%", "background-color": "red"}
-#                 )
-#             ],
-#             style={"height": "35vh"}
-#         ),
-#         dbc.Row(
-#             [
-#                 dbc.Col(
-#                     # html.P("お手本表示"),
-#                     html.Img(src=app.get_asset_url('Lenna.png'),
-#                              width="auto", height="100%"),
-#                     width=6,
-#                     style={"text-align": "center", "height": "100%",
-#                            "background-color": "blue"}
-#                 ),
-#                 dbc.Col(children=[
-#                     # html.P("カメラ画像表示"),
-#                     html.Img(src="/video_feed", alt="video", width="auto", height="100%")],
-#                     width=6,
-#                     style={"display": "block",
-#                            "text-align": "center", "height": "100%",
-#                            "background-color": "cyan"}
-#                 )
-#             ],
-#             style={"height": "35vh"}
-#         )
-#     ],
-#     fluid=True
-# )
-
-app.layout = l2
+s = dbc.Container(
+    [
+        dbc.Row(
+            [
+                dbc.Col(
+                    # show_text,
+                    # back_button,
+                    children=stretch_layer_buttons,
+                    width=12,
+                    className='bg-light',
+                    id='title_area2'
+                ),
+            ],
+            align='center', style={"height": "10vh"}
+        ),
+        dbc.Row(
+            [
+                dbc.Col(
+                    show_image,
+                    width=6,
+                    className='bg-primary',
+                    id='image_area2'
+                ),
+                dbc.Col(
+                    show_video2,
+                    width=6,
+                    className='bg-danger',
+                    id='video_area2'
+                ),
+            ],
+            align='center', style={"height": "90vh"}
+        ),
+    ],
+    fluid=True
+)
+# app.layout = l2
+app.layout = html.Div([
+    dcc.Location(id='url', refresh=False),
+    # html.Div(children=None, id='hidden_div_for_redirect_callback'),
+    # dcc.Store(id='session', storage_type='session',
+    #   data={'stretch_flag': False}),
+    html.Div(id='page-content')
+])
 
 
-@app.callback(Output('set_button', 'disabled'),
-              Output('stop_button', 'disabled'),
-              Output('msg1', 'children'),
-              Output('video_container', 'children'),
+# @app.callback(Output('session', 'data'),
+#               Input('test_button', 'n_clicks'),
+#               State('session', 'data'), prevent_initial_call=True)
+# def test(n, data):
+#     print(type(data))
+#     print(data)
+#     data['stretch_flag'] = not data['stretch_flag']
+#     return data
+
+
+@app.callback(Output('page-content', 'children'),
+              [Input('url', 'pathname')])
+def display_page(pathname):
+    if pathname == '/':
+        return l2
+    elif pathname == '/stretch':
+        return s
+    else:
+        return '404'
+
+
+# @app.callback(Output('page-content', 'children'),
+#               [Input('url', 'pathname')],
+#               State('session', 'data'))
+# def display_page(pathname, data):
+#     if pathname == '/':
+#         return l2
+#     elif pathname == '/stretch':
+#         if data['stretch_flag'] == False:
+#             return l2
+#         else:
+#             return s
+#     # elif pathname == '/stretch':
+#     #     return s
+#     else:
+#         return '404'
+
+
+@app.callback(Output('button_area', 'children'),
+              Output('msg2', 'children'),
               Input('set_button', 'n_clicks'),
-              Input('stop_button', 'n_clicks'),
               State('my-date-picker-single', 'date'),
               State('hour-picker', 'value'),
-              State('minute-picker', 'value'))
-def update_buttons(set_n, stop_n, date_value, hour_value, minute_value):
-    ctx = dash.callback_context
-    id = ctx.triggered[0]['prop_id'].split('.')[0]
-    if id == 'set_button':
+              State('minute-picker', 'value'), prevent_initial_call=True)
+def set_button_pushed(set_n, date_value, hour_value, minute_value):
+    if (set_n is None) or (set_n == 0):
+        raise PreventUpdate
+    else:
         time_str = date_value + "-"+str(hour_value)+"-"+str(minute_value)+"-0"
-        setted_time = dt.strptime(time_str, '%Y-%m-%d-%H-%M-%S')
+        set_time = dt.strptime(time_str, '%Y-%m-%d-%H-%M-%S')
         current_time = dt.now()
-        if setted_time > current_time:
-            alarm_date[0] = setted_time.strftime('%Y-%m-%d-%H-%M-%S')
-            return True, False, 'You set alarm clock', html.Img(src="/video_feed", alt="video", width="auto", height="100%")
+        if set_time > current_time:
+            # alarm_dates.append(setted_time)
+            global alarm_date
+            print(alarm_date)
+            alarm_date = set_time
+            print(alarm_date)
+            return cancel_button, 'You set alarm clock'
         else:
-            return dash.no_update, dash.no_update, 'Please set again', dash.no_update
-    elif id == 'stop_button':
-        alarm_date[0] = ''
-        return False, True, 'You canceled alarm clock', None
+            return dash.no_update, 'Please set again'
+
+
+# redirect_to_stretch = dcc.Location(
+#     pathname="/stretch", id="redirect_to_stretch")
+
+
+@ app.callback(Output('button_area', 'children'),
+               Output('msg2', 'children'),
+               Input('stop_button', 'n_clicks'),
+               prevent_initial_call=True)
+def cancel_button_pushed(stop_button):
+    # del alarm_dates[0]
+    if (stop_button is None) or (stop_button == 0):
+        raise PreventUpdate
     else:
-        return dash.no_update, dash.no_update, dash.no_update, dash.no_update
+        # del alarm_dates[0]
+        global alarm_date
+        print(alarm_date)
+        alarm_date = None
+        print(alarm_date)
+        return set_button, None
+
+# @app.callback(Output('session', 'data'),
+#               Output('hidden_div_for_redirect_callback', 'children'),
+#               Input('stop_button', 'n_clicks'),
+#               State('session', 'data'),
+#               prevent_initial_call=True)
+# def stop_button_pushed(stop_n, data):
+#     if (stop_n is None) or (stop_n == 0):
+#         raise PreventUpdate
+#     else:
+#         data['stretch_flag'] = True
+#         return data, redirect_to_stretch
 
 
-@app.callback(Output('msg2', 'children'),
-              Input('interval_component', 'n_intervals'))
-def update_msg(n):
+@ app.callback(Output('button_area', 'children'),
+               Output('msg2', 'children'),
+               Input('cancel_button', 'n_clicks'),
+               prevent_initial_call=True)
+def cancel_button_pushed(cancel_n):
+    # del alarm_dates[0]
+    if (cancel_n is None) or (cancel_n == 0):
+        raise PreventUpdate
+    else:
+        # del alarm_dates[0]
+        global alarm_date
+        print(alarm_date)
+        alarm_date = None
+        print(alarm_date)
+        return set_button, 'You canceled alarm clock'
+
+
+@ app.callback(Output('button_area', 'children'),
+               Output('msg1', 'children'),
+               Input('interval_component', 'n_intervals'))
+def check_alarm(interval_n):
     today = dt.now()
-    if not alarm_date[0]:
+    # if not alarm_dates:
+    global alarm_date
+    if alarm_date is None:
         # return '今は{0}年{1}月{2}日{3}時{4}分{5}秒です'.format(today.year, today.month, today.day, today.hour, today.minute, today.second)
-        return '{0}/{1}/{2} {3}:{4}:{5}'.format(today.year, today.month, today.day, today.hour, today.minute, today.second)
+        return dash.no_update, '{0}/{1}/{2} {3}:{4}:{5}'.format(today.year, str(today.month).zfill(2), str(today.day).zfill(2), str(today.hour).zfill(2), str(today.minute).zfill(2), str(today.second).zfill(2))
     else:
-        alarm_time = dt.strptime(alarm_date[0], '%Y-%m-%d-%H-%M-%S')
-        if alarm_time > today:
-            date_diff = alarm_time - today
+        # alarm_time = alarm_dates[0]
+        # print(alarm_dates)
+        if alarm_date > today:
+            date_diff = alarm_date - today
             hours, tminute = divmod(date_diff.seconds, 3600)
             minutes, seconds = divmod(tminute, 60)
-            return '{0}days {1}:{2}:{3}'.format(date_diff.days, hours, minutes, seconds)
+            return dash.no_update, '{0}days {1}:{2}:{3}'.format(date_diff.days, str(hours).zfill(2), str(minutes).zfill(2), str(seconds).zfill(2))
         else:
-            return 'Alarming'
+            return stop_button, 'Alarming'
 
 
-# @app.callback(Output('live-update-text', 'children'),
-#               Input('interval-component', 'n_intervals'))
-# def update_metrics(n):
-#     today = dt.now()
-#     if not alarm[0]:
-#         return [html.Span('今は{0}年{1}月{2}日{3}時{4}分{5}秒です'.format(today.year, today.month, today.day, today.hour, today.minute, today.second))]
-#     else:
-#         print(alarm[0])
-#         setted_time = dt.strptime(alarm[0], '%Y-%m-%d-%H-%M-%S')
-#         if setted_time > today:
-#             date_diff = setted_time - today
-#             hours, tminute = divmod(date_diff.seconds, 3600)
-#             minutes, seconds = divmod(tminute, 60)
-#             return [html.Span('アラームまであと{0}日{1}時間{2}分{3}秒です'.format(date_diff.days, hours, minutes, seconds)),
-#                     html.Button('stop', id='alarm-count-stop-val', n_clicks=0)]
-#         else:
-#             return [html.Span('アラームがなっています'), html.Button('stop', id='alarming-stop-val', n_clicks=0)]
-
-
-# @app.callback(Output('live-update-text2', 'children'),
-#               Input('alarm-count-stop-val', 'n_clicks'))
-# def alarm_cancel(n):
-#     if n > 0:
-#         print("alarm_cancel")
-#         alarm[0] = ''
-#         # return {'display': 'none'}
-#         return [html.Span('アラームをキャンセルしました')]
-
-
-# @app.callback(Output('live-update-text3', 'children'),
-#               Input('alarming-stop-val', 'n_clicks'))
-# def alarm_stop(n):
-#     if n > 0:
-#         print("alarm_stop")
-#         alarm[0] = ''
-#         return [html.Span('アラームを停止しました')]
-
-
-# @app.callback(
-#     Output(component_id='my-output', component_property='children'),
-#     [Input('set-val', 'n_clicks')],
-#     [State('my-date-picker-single', 'date'),
-#      State('hour-picker', 'value'),
-#      State('minute-picker', 'value')]
-# )
-# def update_output(n_clicks, date_value, hour_value, minute_value):
-#     if n_clicks > 0:
-#         time_str = date_value + "-"+str(hour_value)+"-"+str(minute_value)+"-0"
-
-#         setted_time = dt.strptime(time_str, '%Y-%m-%d-%H-%M-%S')
-#         if setted_time < dt.today():
-#             return '未来の時間を入力してください'
-#         else:
-#             alarm[0] = setted_time.strftime('%Y-%m-%d-%H-%M-%S')
-#             return '{0}年{1}月{2}日の{3}時{4}分にアラームをセットしました'.format(setted_time.year, setted_time.month, setted_time.day, setted_time.hour, setted_time.minute)
+@ app.callback(Output('video_container2', 'children'),
+               Input('video_start_button', 'n_clicks'), Input('video_stop_button', 'n_clicks'), prevent_initial_call=True)
+def update_buttons(video_start_n, video_stop_n):
+    ctx = dash.callback_context
+    id = ctx.triggered[0]['prop_id'].split('.')[0]
+    global camera_object
+    if id == 'video_start_button':
+        if camera_object is None:
+            camera_object = VideoCamera()
+        camera_object.start_camera()
+        return html.Img(src="/video_feed", alt="video", width="auto", height="100%")
+    else:
+        camera_object.stop_camera()
+        return None
 
 
 if __name__ == '__main__':
