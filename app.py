@@ -282,7 +282,7 @@ l2 = dbc.Container(
                     id='title_area'
                 ),
             ],
-            align='center', style={"height": "8vh"}
+            align='center', style={"height": "10vh"}
         ),
         dbc.Row(
             [
@@ -293,24 +293,24 @@ l2 = dbc.Container(
                     id='alarm_area'
                 ),
             ],
-            align='center', style={"height": "47vh"}
+            align='center', style={"height": "80vh"}
         ),
         dbc.Row(
             [
-                dbc.Col(
-                    show_image,
-                    width=6,
-                    className='bg-primary',
-                    id='image_area'
-                ),
-                dbc.Col(
-                    show_video,
-                    width=6,
-                    className='bg-danger',
-                    id='video_area'
-                ),
+                # dbc.Col(
+                #     show_image,
+                #     width=6,
+                #     className='bg-primary',
+                #     id='image_area'
+                # ),
+                # dbc.Col(
+                #     show_video,
+                #     width=6,
+                #     className='bg-danger',
+                #     id='video_area'
+                # ),
             ],
-            align='center', style={"height": "45vh"}
+            align='center', style={"height": "10vh"}
         ),
     ],
     fluid=True
