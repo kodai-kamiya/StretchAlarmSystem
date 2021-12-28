@@ -12,6 +12,7 @@ from flask import Flask, Response
 import cv2
 import gluoncv as gcv
 from gluoncv import data
+from gluoncv.data.transforms import pose
 import matplotlib.pyplot as plt
 import mxnet as mx
 import numpy as np
@@ -30,15 +31,29 @@ import datetime
 # from jupyter_dash import JupyterDash
 
 
+# filename = "mov1.mp4"
+
+def angle_betweeen_two_vectors(v1: np.ndarray, v2: np.ndarray):
+    cos_theta = np.inner(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2))
+    theta = np.arccos(np.clip(cos_theta, -1.0, 1.0))
+    size_of_angle = np.rad2deg(theta)
+    return size_of_angle
+
+
 class VideoCamera(object):
     def __init__(self):
         print('instanced')
+        self.filename = "mov2.mp4"
         # capture from video file
-        # filename = "filepath"
-        # self.video = cv2.VideoCapture(filename)
+        self.video = cv2.VideoCapture(self.filename)
+
+        self.esti_flag = False
+
+        self.all_frames = 0
+        self.good_counts = 0
 
         # capture from webcam
-        self.video = cv2.VideoCapture(0)
+        # self.video = cv2.VideoCapture(0)
 
         self.detector = model_zoo.get_model(
             'ssd_512_mobilenet1.0_voc',
@@ -70,7 +85,7 @@ class VideoCamera(object):
 
     def start_camera(self):
         print('camera restart')
-        self.video.open(0)
+        self.video.open(self.filename)
 
     def get_frame(self):
         while(True):
@@ -82,13 +97,14 @@ class VideoCamera(object):
                 success, image = self.video.read()
 
         # do pose estimation
-        # pose_img = self.pose_estimation(image)
-        # flipped_pose_img = cv2.flip(pose_img, 1)
-        # ret, jpeg = cv2.imencode('.jpg', flipped_pose_img)
-
+        if self.esti_flag:
+            pose_img = self.pose_estimation(image)
+            flipped_pose_img = cv2.flip(pose_img, 1)
+            ret, jpeg = cv2.imencode('.jpg', flipped_pose_img)
         # do not pose estimation
-        flipped_image = cv2.flip(image, 1)
-        ret, jpeg = cv2.imencode('.jpg', flipped_image)
+        else:
+            flipped_image = cv2.flip(image, 1)
+            ret, jpeg = cv2.imencode('.jpg', flipped_image)
 
         return jpeg.tobytes()
 
@@ -118,7 +134,61 @@ class VideoCamera(object):
                                                    scores,
                                                    box_thresh=0.5,
                                                    keypoint_thresh=0.2)
+
+        self.all_frames += 1
+
+        ba = (pred_coords[0][7] - pred_coords[0][5]).asnumpy()
+        bc = (pred_coords[0][11] - pred_coords[0][5]).asnumpy()
+        angle_rightarm = angle_betweeen_two_vectors(ba, bc)
+        if not (160 <= angle_rightarm <= 180):
+            return pose_img
+
+        ba = (pred_coords[0][8] - pred_coords[0][6]).asnumpy()
+        bc = (pred_coords[0][12] - pred_coords[0][6]).asnumpy()
+        angle_lefttarm = angle_betweeen_two_vectors(ba, bc)
+        if not (160 <= angle_lefttarm <= 180):
+            return pose_img
+
+        ba = (pred_coords[0][5] - pred_coords[0][11]).asnumpy()
+        bc = (pred_coords[0][13] - pred_coords[0][11]).asnumpy()
+        angle_rightleg = angle_betweeen_two_vectors(ba, bc)
+        if not (130 <= angle_rightleg <= 180):
+            return pose_img
+
+        ba = (pred_coords[0][6] - pred_coords[0][12]).asnumpy()
+        bc = (pred_coords[0][14] - pred_coords[0][12]).asnumpy()
+        angle_leftleg = angle_betweeen_two_vectors(ba, bc)
+        if not (130 <= angle_leftleg <= 180):
+            return pose_img
+
+        ba = (pred_coords[0][9] - pred_coords[0][7]).asnumpy()
+        bc = (pred_coords[0][5] - pred_coords[0][7]).asnumpy()
+        angle_rightelbow = angle_betweeen_two_vectors(ba, bc)
+        if not (130 <= angle_rightelbow <= 180):
+            return pose_img
+
+        ba = (pred_coords[0][6] - pred_coords[0][8]).asnumpy()
+        bc = (pred_coords[0][10] - pred_coords[0][8]).asnumpy()
+        angle_leftelbow = angle_betweeen_two_vectors(ba, bc)
+        if not (130 <= angle_leftelbow <= 180):
+            return pose_img
+
+        self.good_counts += 1
+
         return pose_img
+
+    def get_judge(self):
+        # print(self.all_frames)
+        # print(self.good_counts)
+
+        if self.all_frames == 0:
+            return False
+        else:
+            good_percent = (self.good_counts / self.all_frames) * 100
+            if(good_percent > 60):
+                return True
+            else:
+                return False
 
 
 def gen(camera):
@@ -322,10 +392,16 @@ stretch_layer_buttons =\
      dbc.Button("start", outline=True,
                 color="primary", className="me-1", id='video_start_button'),
      dbc.Button("stop", outline=True,
-                color="danger", className="me-1", id='video_stop_button'), test_button]
+                color="danger", className="me-1", id='video_stop_button'), test_button, html.Div(id='hidden-div', style={'display': 'none'}),
+     html.Div(children='a', id='msg_area2')]
 
 s = dbc.Container(
     [
+        dcc.Interval(
+            id='interval_component2',
+            interval=1*1000,  # in milliseconds
+            n_intervals=0
+        ),
         dbc.Row(
             [
                 dbc.Col(
@@ -451,6 +527,21 @@ def cancel_button_pushed(stop_button):
         print(alarm_date)
         return set_button, None
 
+
+@ app.callback(Output('hidden-div', 'children'), Input('test_button', 'n_clicks'),
+               prevent_initial_call=True)
+def cancel_button_pushed(test_button):
+    # del alarm_dates[0]
+    if (test_button is None) or (test_button == 0):
+        raise PreventUpdate
+    else:
+        global camera_object
+        camera_object.esti_flag = not camera_object.esti_flag
+        print(camera_object.all_frames)
+        print(camera_object.good_counts)
+        print(camera_object.get_judge())
+
+
 # @app.callback(Output('session', 'data'),
 #               Output('hidden_div_for_redirect_callback', 'children'),
 #               Input('stop_button', 'n_clicks'),
@@ -485,6 +576,7 @@ def cancel_button_pushed(cancel_n):
                Output('msg1', 'children'),
                Input('interval_component', 'n_intervals'))
 def check_alarm(interval_n):
+    # print(interval_n)
     today = dt.now()
     # if not alarm_dates:
     global alarm_date
@@ -501,6 +593,46 @@ def check_alarm(interval_n):
             return dash.no_update, '{0}days {1}:{2}:{3}'.format(date_diff.days, str(hours).zfill(2), str(minutes).zfill(2), str(seconds).zfill(2))
         else:
             return stop_button, 'Alarming'
+
+
+stretch_start_time = None
+once_flag1 = True
+once_flag2 = True
+
+
+@ app.callback(Output('msg_area2', 'children'),
+               Input('interval_component2', 'n_intervals'))
+def a(interval_n):
+    today = dt.now()
+    global stretch_start_time
+    if not stretch_start_time:
+        stretch_start_time = today
+    elapsed_time = (dt.now() - stretch_start_time).seconds
+    if elapsed_time < 11:
+        return 'Stretch start in ' + str(10 - elapsed_time) + ' seconds'
+    elif 11 <= elapsed_time < 21:
+        global once_flag1
+        if once_flag1:
+            camera_object.esti_flag = True
+            once_flag1 = False
+        return 'Stretch now!'
+    else:
+        global once_flag2
+        if once_flag2:
+            camera_object.esti_flag = False
+            once_flag2 = False
+        return 'result:' + str(camera_object.get_judge())
+
+    # if(interval_n <= 10):
+    #     if interval_n == 10:
+    #         camera_object.esti_flag = True
+    #     return 'Stretch start in ' + str(10 - interval_n) + ' seconds'
+    # elif 10 < interval_n < 21:
+    #     return 'Stretch now!'
+    # else:
+    #     if interval_n == 21:
+    #         camera_object.esti_flag = False
+    #     return 'result:' + str(camera_object.get_judge())
 
 
 @ app.callback(Output('video_container2', 'children'),
