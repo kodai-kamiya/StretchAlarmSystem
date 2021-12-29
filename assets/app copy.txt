@@ -8,8 +8,8 @@ padding-left: 3px !important;
 padding-right: 3px !important;
 }
 
-/* ルートのタイトルエリアの設定(画面上) */
-#r_title_area {
+/* タイトルエリアの設定(画面上) */
+#title_area {
 /* display: table; */
 display: flex;
 align-items: center;
@@ -20,7 +20,7 @@ height: 100%;
 border: solid 1px black;
 }
 
-#r_title {
+#text_cell {
 /* display: table-cell;
 vertical-align: middle; */
 font-size: 32px;
@@ -30,8 +30,8 @@ margin: 0 auto;
 /* background-color: rgba(255, 255, 255, 0.6); */
 }
 
-/* ルートのメインとなるエリアの設定(画面中央) */
-#r_alarm_area {
+/* メインとなるエリアの設定(画面中央) */
+#alarm_area {
 /* width: 50%; */
 height: 100%;
 /* background-color: yellow; */
@@ -39,13 +39,13 @@ border: solid 1px black;
 /* border-radius:10px; */
 }
 
-#r_alarm_area_container {
+#alarm_area_container {
   height: 100%;
   /* background-color: yellow; */
   width: 100%;
 }
 
-#r_one_comment_area_container{
+#one_comment_area_container{
   height: 10%;
   /* background-color: red; */
   display: flex;
@@ -53,40 +53,40 @@ border: solid 1px black;
   text-align: center;
 }
 
-#r_one_comment_area{
+#one_comment_area{
   font-size: 16px;
   font-weight: bold;
   margin: 0 auto;
 }
 
-#r_alarm_input_area_container {
+#alarm_input_area_container {
   height: 70%;
   /* background-color: blue; */
   width: 100%;
 }
 
-#r_date_msg_area {
+#date_msg_area {
   text-align: center;
   font-size: 18px;
   font-weight: bold;
   padding: 10px 0px 10px;
 }
 
-#r_date_input_area{
+#date_input_area{
   /* background-color: yellow; */
   text-align: center;
   width: 50%;
   margin: 0 auto;
 }
 
-#r_time_msg_area{
+#time_msg_area{
   text-align:center;
   font-size:18px;
   font-weight:bold;
   padding: 10px 0px 10px;
 }
 
-#r_hour_and_minute_input_area {
+#hour_and_minute_input_area {
 display: flex;
 align-items: center;
 /* background-color: yellow; */
@@ -95,42 +95,50 @@ width: 60%;
 margin: 0 auto;
 }
 
-#r_colon_area{
+#colon_area{
   font-size: 18px;
   font-weight: bold;
   width: 20px;
 }
-#r_hour-picker{
+#hour-picker{
   height: 100%;
   width: 215px;
 }
 
-#r_minute-picker{
+#minute-picker{
   height: 100%;
   width: 215px;
 }
 
-#r_button_area{
+/* #button_area{
+  width: 30%;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0px 10px;
+} */
+
+#button_area{
   width: 30%;
   margin: 0 auto;
   text-align:center;
   padding: 10px 0px 10px;
 }
 
-#r_msg_area{
+#msg_area{
   height: 20%;
   /* background-color: green; */
   width: 100%;
 }
 
-#r_msg1{
+#msg1{
   font-family:monospace, serif;
   text-align:center;
   font-size:18px;
   font-weight:bold;
 }
 
-#r_msg2{
+#msg2{
   /* font-family:monospace, serif; */
   text-align:center;
   font-size:18px;
@@ -164,4 +172,25 @@ border: solid 1px black;
 text-align: center;
 width: 100%;
 height: 100%;
+}
+
+#video_container2 {
+text-align: center;
+width: 100%;
+height: 100%;
+}
+
+#image_area2 {
+/* width: 50%; */
+height: 100%;
+/* background-color: yellow; */
+border: solid 1px black;
+/* border-radius:10px; */
+}
+
+#video_area2 {
+/* width: 50%; */
+height: 100%;
+background-color: yellow;
+border: solid 1px black;
 }

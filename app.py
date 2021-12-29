@@ -39,7 +39,7 @@ class VideoCamera(object):
         # capture from webcam
         self.filename = 0
         # capture from video file
-        self.filename = 'filename.mp4'
+        # self.filename = 'mov2.mp4'
 
         self.video = cv2.VideoCapture(self.filename)
 
@@ -227,29 +227,26 @@ minute_options = []
 for year in minute:
     minute_options.append({'label': str(year), 'value': year})
 
-# alarm_dates = []
 alarm_date = None
-
-# camera_objects = []
 camera_object = None
+stretch_start_time = None
 
 
 @server.route('/video_feed')
 def video_feed():
     return Response(gen(camera_object),
                     mimetype='multipart/x-mixed-replace; boundary=frame')
-    # return Response(gen(camera_objects[0]),
-    #                 mimetype='multipart/x-mixed-replace; boundary=frame')
 
 
 show_text =\
-    html.Div('Stretching Alarm Clock', id='text_cell')
+    html.Div('Stretching Alarm Clock', id='r_title')
 
 set_button = dbc.Button("Set", outline=True, color="primary",
                         className="me-1", id='set_button')
 
 stop_button = dbc.Button("Stop", outline=True,
                          color="danger", className="me-1", id='stop_button', href='/stretch')
+
 cancel_button = dbc.Button("Cancel", outline=True,
                            color="danger", className="me-1", id='cancel_button')
 
@@ -259,24 +256,24 @@ test_button = dbc.Button("test", outline=True,
 back_button = dbc.Button("back", outline=True,
                          color="danger", className="me-1", id='back_button', href='/')
 
-show_main =\
+r_main_area =\
     html.Div(
         children=[
             html.Div(children=[html.Div('Please Set Alarm Clock',
-                                        id='one_comment_area')], id='one_comment_area_container'),
+                                        id='r_one_comment_area')], id='r_one_comment_area_container'),
             html.Div(
                 children=[
                     dcc.Interval(
-                        id='interval_component',
+                        id='r_interval_component',
                         interval=1*1000,  # in milliseconds
                         n_intervals=0
                     ),
-                    html.Div('Date', id='date_msg_area'),
+                    html.Div('Date', id='r_date_msg_area'),
                     html.Div(
                         children=[
 
                             dcc.DatePickerSingle(
-                                id='my-date-picker-single',
+                                id='r_my-date-picker-single',
                                 min_date_allowed=date(2021, 1, 1),
                                 max_date_allowed=date(2022, 12, 31),
                                 # initial_visible_month=date(2017, 8, 5),
@@ -284,26 +281,25 @@ show_main =\
                                 date=datetime.date.today(),
                                 display_format='Y/M/D'),
 
-                        ], id='date_input_area'),
-                    html.Div('Time', id='time_msg_area'),
+                        ], id='r_date_input_area'),
+                    html.Div('Time', id='r_time_msg_area'),
                     html.Div(children=[
                         dcc.Dropdown(
-                            id='hour-picker', options=hour_options, value='0'),
-                        html.Div(':', id='colon_area'),
+                            id='r_hour-picker', options=hour_options, value='0'),
+                        html.Div(':', id='r_colon_area'),
                         dcc.Dropdown(
-                            id='minute-picker', options=minute_options, value='0')
-                    ], id='hour_and_minute_input_area'),
+                            id='r_minute-picker', options=minute_options, value='0')
+                    ], id='r_hour_and_minute_input_area'),
                     html.Div(children=[
                         set_button,
-                        # stop_button,
-                    ], id='button_area')
+                    ], id='r_button_area')
 
-                ], id='alarm_input_area_container'),
+                ], id='r_alarm_input_area_container'),
             html.Div(children=[
-                html.Div(children=None, id='msg1'),
-                html.Div(children=None, id='msg2'),
-            ], id='msg_area'),
-        ], id='alarm_area_container')
+                html.Div(children=None, id='r_msg1'),
+                html.Div(children=None, id='r_msg2'),
+            ], id='r_msg_area'),
+        ], id='r_alarm_area_container')
 
 show_image =\
     html.Div(
@@ -315,21 +311,11 @@ show_image =\
 
 show_video =\
     html.Div(
-        children=None, id='video_container'
+        children=[html.Img(src="/video_feed", alt="video", width="auto", height="100%")], id='video_container'
     )
 
-# show_video2 =\
-#     html.Div(
-#         children=None, id='video_container2'
-#     )
-
-show_video2 =\
-    html.Div(
-        children=[html.Img(src="/video_feed", alt="video", width="auto", height="100%")], id='video_container2'
-    )
-
-
-l2 = dbc.Container(
+# ルート(/)用レイアウト
+r = dbc.Container(
     [
         dbc.Row(
             [
@@ -337,7 +323,7 @@ l2 = dbc.Container(
                     show_text,
                     width=12,
                     className='bg-light',
-                    id='title_area'
+                    id='r_title_area'
                 ),
             ],
             align='center', style={"height": "10vh"}
@@ -345,43 +331,30 @@ l2 = dbc.Container(
         dbc.Row(
             [
                 dbc.Col(
-                    show_main,
+                    r_main_area,
                     width={"size": 6, "offset": 3},
                     className='bg-secondary',
-                    id='alarm_area'
+                    id='r_alarm_area'
                 ),
             ],
             align='center', style={"height": "80vh"}
         ),
-        dbc.Row(
-            [
-                # dbc.Col(
-                #     show_image,
-                #     width=6,
-                #     className='bg-primary',
-                #     id='image_area'
-                # ),
-                # dbc.Col(
-                #     show_video,
-                #     width=6,
-                #     className='bg-danger',
-                #     id='video_area'
-                # ),
-            ],
-            align='center', style={"height": "10vh"}
-        ),
+        dbc.Row(None,
+                align='center', style={"height": "10vh"}
+                ),
     ],
     fluid=True
 )
 
-stretch_layer_buttons =\
-    [
-        # dbc.Button("back", outline=True,
-        #         color="danger", className="me-1", id='back_button', href='/'),
-        #  test_button,
-        html.Div(id='hidden-div', style={'display': 'none'}),
-        html.Div(children=None, id='s_msg1'), html.Div(children=None, id='s_msg2'), html.Div(children=None, id='back_button_area')]
 
+s_main_area =\
+    [
+        # html.Div(id='hidden-div', style={'display': 'none'}),
+        html.Div(children=None, id='s_msg1'),
+        html.Div(children=None, id='s_msg2'),
+        html.Div(children=None, id='s_back_button_area')]
+
+# ストレッチ(/stretch)用レイアウト
 s = dbc.Container(
     [
         dcc.Interval(
@@ -392,10 +365,10 @@ s = dbc.Container(
         dbc.Row(
             [
                 dbc.Col(
-                    children=stretch_layer_buttons,
+                    children=s_main_area,
                     width=12,
                     className='bg-light',
-                    id='title_area2'
+                    id='s_title_area'
                 ),
             ],
             align='center', style={"height": "20vh"}
@@ -406,13 +379,13 @@ s = dbc.Container(
                     show_image,
                     width=6,
                     className='bg-primary',
-                    id='image_area2'
+                    id='image_area'
                 ),
                 dbc.Col(
-                    show_video2,
+                    show_video,
                     width=6,
                     className='bg-danger',
-                    id='video_area2'
+                    id='video_area'
                 ),
             ],
             align='center', style={"height": "80vh"}
@@ -424,14 +397,8 @@ s = dbc.Container(
 
 app.layout = html.Div([
     dcc.Location(id='url', refresh=False),
-    # html.Div(children=None, id='hidden_div_for_redirect_callback'),
-    # dcc.Store(id='session', storage_type='session',
-    #   data={'stretch_flag': False}),
     html.Div(id='page-content')
 ])
-
-
-stretch_start_time = None
 
 
 @app.callback(Output('page-content', 'children'),
@@ -447,7 +414,7 @@ def display_page(pathname):
     if pathname == '/':
         if camera_object is not None:
             camera_object.stop_camera()
-        return l2
+        return r
     elif pathname == '/stretch':
         if camera_object is None:
             camera_object = VideoCamera()
@@ -460,12 +427,12 @@ def display_page(pathname):
         return '404'
 
 
-@app.callback(Output('button_area', 'children'),
-              Output('msg2', 'children'),
+@app.callback(Output('r_button_area', 'children'),
+              Output('r_msg2', 'children'),
               Input('set_button', 'n_clicks'),
-              State('my-date-picker-single', 'date'),
-              State('hour-picker', 'value'),
-              State('minute-picker', 'value'), prevent_initial_call=True)
+              State('r_my-date-picker-single', 'date'),
+              State('r_hour-picker', 'value'),
+              State('r_minute-picker', 'value'), prevent_initial_call=True)
 def set_button_pushed(set_n, date_value, hour_value, minute_value):
     if (set_n is None) or (set_n == 0):
         raise PreventUpdate
@@ -481,11 +448,11 @@ def set_button_pushed(set_n, date_value, hour_value, minute_value):
             return dash.no_update, 'Please set again'
 
 
-@ app.callback(Output('button_area', 'children'),
-               Output('msg2', 'children'),
+@ app.callback(Output('r_button_area', 'children'),
+               Output('r_msg2', 'children'),
                Input('stop_button', 'n_clicks'),
                prevent_initial_call=True)
-def cancel_button_pushed(stop_button):
+def stop_button_pushed(stop_button):
     if (stop_button is None) or (stop_button == 0):
         raise PreventUpdate
     else:
@@ -496,8 +463,8 @@ def cancel_button_pushed(stop_button):
         return set_button, None
 
 
-@ app.callback(Output('button_area', 'children'),
-               Output('msg2', 'children'),
+@ app.callback(Output('r_button_area', 'children'),
+               Output('r_msg2', 'children'),
                Input('cancel_button', 'n_clicks'),
                prevent_initial_call=True)
 def cancel_button_pushed(cancel_n):
@@ -511,9 +478,9 @@ def cancel_button_pushed(cancel_n):
         return set_button, 'You canceled alarm clock'
 
 
-@ app.callback(Output('button_area', 'children'),
-               Output('msg1', 'children'),
-               Input('interval_component', 'n_intervals'))
+@ app.callback(Output('r_button_area', 'children'),
+               Output('r_msg1', 'children'),
+               Input('r_interval_component', 'n_intervals'))
 def check_alarm(interval_n):
     today = dt.now()
     global alarm_date
@@ -531,9 +498,9 @@ def check_alarm(interval_n):
 
 @ app.callback(Output('s_msg1', 'children'),
                Output('s_msg2', 'children'),
-               Output('back_button_area', 'children'),
+               Output('s_back_button_area', 'children'),
                Input('s_interval_component', 'n_intervals'))
-def a(interval_n):
+def check_alarm(interval_n):
     global stretch_start_time
     if not stretch_start_time:
         stretch_start_time = dt.now()
