@@ -26,12 +26,6 @@ from PIL import Image
 from datetime import datetime as dt
 import datetime
 
-# from a import example
-# import plotly.express as px
-# from jupyter_dash import JupyterDash
-
-
-# filename = "mov1.mp4"
 
 def angle_betweeen_two_vectors(v1: np.ndarray, v2: np.ndarray):
     cos_theta = np.inner(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2))
@@ -42,18 +36,16 @@ def angle_betweeen_two_vectors(v1: np.ndarray, v2: np.ndarray):
 
 class VideoCamera(object):
     def __init__(self):
-        print('instanced')
-        self.filename = "mov2.mp4"
+        # capture from webcam
+        self.filename = 0
         # capture from video file
+        self.filename = 'filename.mp4'
+
         self.video = cv2.VideoCapture(self.filename)
 
         self.esti_flag = False
-
         self.all_frames = 0
         self.good_counts = 0
-
-        # capture from webcam
-        # self.video = cv2.VideoCapture(0)
 
         self.detector = model_zoo.get_model(
             'ssd_512_mobilenet1.0_voc',
@@ -76,15 +68,13 @@ class VideoCamera(object):
     def __del__(self):
         print('I\'ll die')
         self.video.release()
-        # del self.video
-        # cv2.destroyAllWindows()
 
     def stop_camera(self):
         print('camera stopped')
         self.video.release()
 
     def start_camera(self):
-        print('camera restart')
+        print('camera restarted')
         self.video.open(self.filename)
 
     def get_frame(self):
@@ -177,10 +167,25 @@ class VideoCamera(object):
 
         return pose_img
 
-    def get_judge(self):
-        # print(self.all_frames)
-        # print(self.good_counts)
+    def start_esti(self):
+        if not self.esti_flag:
+            self.esti_flag = True
 
+    def stop_esti(self):
+        if self.esti_flag:
+            self.esti_flag = False
+
+    def clear_judge(self):
+        self.all_frames = 0
+        self.good_counts = 0
+
+    def print_values(self):
+        print('all_frames:' + str(self.all_frames))
+        print('good_frames:' + str(self.good_counts))
+        if self.all_frames != 0:
+            print('good_percentage:' + str((self.good_counts/self.all_frames)*100))
+
+    def get_judge(self):
         if self.all_frames == 0:
             return False
         else:
@@ -222,12 +227,8 @@ minute_options = []
 for year in minute:
     minute_options.append({'label': str(year), 'value': year})
 
-# alarm = ['']
 # alarm_dates = []
 alarm_date = None
-
-is_alarm_stopped = False
-# x = VideoCamera()
 
 # camera_objects = []
 camera_object = None
@@ -247,25 +248,16 @@ show_text =\
 set_button = dbc.Button("Set", outline=True, color="primary",
                         className="me-1", id='set_button')
 
-# stop_button = dbc.Button("Stop", outline=True,
-#                          color="danger", className="me-1", id='stop_button')
 stop_button = dbc.Button("Stop", outline=True,
                          color="danger", className="me-1", id='stop_button', href='/stretch')
-
-# cancel_button = dbc.Button("Cancel", outline=True,
-#                            color="danger", className="me-1", id='cancel_button', href='/stretch')
 cancel_button = dbc.Button("Cancel", outline=True,
                            color="danger", className="me-1", id='cancel_button')
 
 test_button = dbc.Button("test", outline=True,
                          color="danger", className="me-1", id='test_button')
 
-# back_button = [dbc.Button("back", outline=True,
-#                           color="danger", className="me-1", id='back_button', href='/'),
-#                dbc.Button("start", outline=True,
-#                           color="primary", className="me-1", id='video_start_button'),
-#                dbc.Button("stop", outline=True,
-#                color="danger", className="me-1", id='video_stop_button')]
+back_button = dbc.Button("back", outline=True,
+                         color="danger", className="me-1", id='back_button', href='/')
 
 show_main =\
     html.Div(
@@ -302,7 +294,6 @@ show_main =\
                             id='minute-picker', options=minute_options, value='0')
                     ], id='hour_and_minute_input_area'),
                     html.Div(children=[
-                        # html.Div(children=set_button, id='example'),
                         set_button,
                         # stop_button,
                     ], id='button_area')
@@ -322,22 +313,19 @@ show_image =\
         ], id='image_container'
     )
 
-# show_video =\
-#     html.Div(
-#         children=[
-#             html.Img(src="/video_feed", alt="video",
-#                      width="auto", height="100%")
-#         ], id='video_container'
-#     )
-
 show_video =\
     html.Div(
         children=None, id='video_container'
     )
 
+# show_video2 =\
+#     html.Div(
+#         children=None, id='video_container2'
+#     )
+
 show_video2 =\
     html.Div(
-        children=None, id='video_container2'
+        children=[html.Img(src="/video_feed", alt="video", width="auto", height="100%")], id='video_container2'
     )
 
 
@@ -387,33 +375,30 @@ l2 = dbc.Container(
 )
 
 stretch_layer_buttons =\
-    [dbc.Button("back", outline=True,
-                color="danger", className="me-1", id='back_button', href='/'),
-     dbc.Button("start", outline=True,
-                color="primary", className="me-1", id='video_start_button'),
-     dbc.Button("stop", outline=True,
-                color="danger", className="me-1", id='video_stop_button'), test_button, html.Div(id='hidden-div', style={'display': 'none'}),
-     html.Div(children='a', id='msg_area2')]
+    [
+        # dbc.Button("back", outline=True,
+        #         color="danger", className="me-1", id='back_button', href='/'),
+        #  test_button,
+        html.Div(id='hidden-div', style={'display': 'none'}),
+        html.Div(children=None, id='s_msg1'), html.Div(children=None, id='s_msg2'), html.Div(children=None, id='back_button_area')]
 
 s = dbc.Container(
     [
         dcc.Interval(
-            id='interval_component2',
+            id='s_interval_component',
             interval=1*1000,  # in milliseconds
             n_intervals=0
         ),
         dbc.Row(
             [
                 dbc.Col(
-                    # show_text,
-                    # back_button,
                     children=stretch_layer_buttons,
                     width=12,
                     className='bg-light',
                     id='title_area2'
                 ),
             ],
-            align='center', style={"height": "10vh"}
+            align='center', style={"height": "20vh"}
         ),
         dbc.Row(
             [
@@ -430,12 +415,13 @@ s = dbc.Container(
                     id='video_area2'
                 ),
             ],
-            align='center', style={"height": "90vh"}
+            align='center', style={"height": "80vh"}
         ),
     ],
     fluid=True
 )
-# app.layout = l2
+
+
 app.layout = html.Div([
     dcc.Location(id='url', refresh=False),
     # html.Div(children=None, id='hidden_div_for_redirect_callback'),
@@ -445,42 +431,33 @@ app.layout = html.Div([
 ])
 
 
-# @app.callback(Output('session', 'data'),
-#               Input('test_button', 'n_clicks'),
-#               State('session', 'data'), prevent_initial_call=True)
-# def test(n, data):
-#     print(type(data))
-#     print(data)
-#     data['stretch_flag'] = not data['stretch_flag']
-#     return data
+stretch_start_time = None
 
 
 @app.callback(Output('page-content', 'children'),
               [Input('url', 'pathname')])
 def display_page(pathname):
+    global camera_object
+    global stretch_start_time
+    stretch_start_time = None
+    if camera_object is not None:
+        camera_object.stop_esti()
+        camera_object.clear_judge()
+
     if pathname == '/':
+        if camera_object is not None:
+            camera_object.stop_camera()
         return l2
     elif pathname == '/stretch':
+        if camera_object is None:
+            camera_object = VideoCamera()
+        else:
+            camera_object.start_camera()
         return s
     else:
+        if camera_object is not None:
+            camera_object.stop_camera()
         return '404'
-
-
-# @app.callback(Output('page-content', 'children'),
-#               [Input('url', 'pathname')],
-#               State('session', 'data'))
-# def display_page(pathname, data):
-#     if pathname == '/':
-#         return l2
-#     elif pathname == '/stretch':
-#         if data['stretch_flag'] == False:
-#             return l2
-#         else:
-#             return s
-#     # elif pathname == '/stretch':
-#     #     return s
-#     else:
-#         return '404'
 
 
 @app.callback(Output('button_area', 'children'),
@@ -497,18 +474,11 @@ def set_button_pushed(set_n, date_value, hour_value, minute_value):
         set_time = dt.strptime(time_str, '%Y-%m-%d-%H-%M-%S')
         current_time = dt.now()
         if set_time > current_time:
-            # alarm_dates.append(setted_time)
             global alarm_date
-            print(alarm_date)
             alarm_date = set_time
-            print(alarm_date)
             return cancel_button, 'You set alarm clock'
         else:
             return dash.no_update, 'Please set again'
-
-
-# redirect_to_stretch = dcc.Location(
-#     pathname="/stretch", id="redirect_to_stretch")
 
 
 @ app.callback(Output('button_area', 'children'),
@@ -516,11 +486,9 @@ def set_button_pushed(set_n, date_value, hour_value, minute_value):
                Input('stop_button', 'n_clicks'),
                prevent_initial_call=True)
 def cancel_button_pushed(stop_button):
-    # del alarm_dates[0]
     if (stop_button is None) or (stop_button == 0):
         raise PreventUpdate
     else:
-        # del alarm_dates[0]
         global alarm_date
         print(alarm_date)
         alarm_date = None
@@ -528,43 +496,14 @@ def cancel_button_pushed(stop_button):
         return set_button, None
 
 
-@ app.callback(Output('hidden-div', 'children'), Input('test_button', 'n_clicks'),
-               prevent_initial_call=True)
-def cancel_button_pushed(test_button):
-    # del alarm_dates[0]
-    if (test_button is None) or (test_button == 0):
-        raise PreventUpdate
-    else:
-        global camera_object
-        camera_object.esti_flag = not camera_object.esti_flag
-        print(camera_object.all_frames)
-        print(camera_object.good_counts)
-        print(camera_object.get_judge())
-
-
-# @app.callback(Output('session', 'data'),
-#               Output('hidden_div_for_redirect_callback', 'children'),
-#               Input('stop_button', 'n_clicks'),
-#               State('session', 'data'),
-#               prevent_initial_call=True)
-# def stop_button_pushed(stop_n, data):
-#     if (stop_n is None) or (stop_n == 0):
-#         raise PreventUpdate
-#     else:
-#         data['stretch_flag'] = True
-#         return data, redirect_to_stretch
-
-
 @ app.callback(Output('button_area', 'children'),
                Output('msg2', 'children'),
                Input('cancel_button', 'n_clicks'),
                prevent_initial_call=True)
 def cancel_button_pushed(cancel_n):
-    # del alarm_dates[0]
     if (cancel_n is None) or (cancel_n == 0):
         raise PreventUpdate
     else:
-        # del alarm_dates[0]
         global alarm_date
         print(alarm_date)
         alarm_date = None
@@ -576,16 +515,11 @@ def cancel_button_pushed(cancel_n):
                Output('msg1', 'children'),
                Input('interval_component', 'n_intervals'))
 def check_alarm(interval_n):
-    # print(interval_n)
     today = dt.now()
-    # if not alarm_dates:
     global alarm_date
     if alarm_date is None:
-        # return '今は{0}年{1}月{2}日{3}時{4}分{5}秒です'.format(today.year, today.month, today.day, today.hour, today.minute, today.second)
         return dash.no_update, '{0}/{1}/{2} {3}:{4}:{5}'.format(today.year, str(today.month).zfill(2), str(today.day).zfill(2), str(today.hour).zfill(2), str(today.minute).zfill(2), str(today.second).zfill(2))
     else:
-        # alarm_time = alarm_dates[0]
-        # print(alarm_dates)
         if alarm_date > today:
             date_diff = alarm_date - today
             hours, tminute = divmod(date_diff.seconds, 3600)
@@ -595,33 +529,29 @@ def check_alarm(interval_n):
             return stop_button, 'Alarming'
 
 
-stretch_start_time = None
-once_flag1 = True
-once_flag2 = True
-
-
-@ app.callback(Output('msg_area2', 'children'),
-               Input('interval_component2', 'n_intervals'))
+@ app.callback(Output('s_msg1', 'children'),
+               Output('s_msg2', 'children'),
+               Output('back_button_area', 'children'),
+               Input('s_interval_component', 'n_intervals'))
 def a(interval_n):
-    today = dt.now()
     global stretch_start_time
     if not stretch_start_time:
-        stretch_start_time = today
+        stretch_start_time = dt.now()
     elapsed_time = (dt.now() - stretch_start_time).seconds
     if elapsed_time < 11:
-        return 'Stretch start in ' + str(10 - elapsed_time) + ' seconds'
+        return 'Stretch start in ' + str(10 - elapsed_time) + ' seconds', dash.no_update, dash.no_update
     elif 11 <= elapsed_time < 21:
-        global once_flag1
-        if once_flag1:
-            camera_object.esti_flag = True
-            once_flag1 = False
-        return 'Stretch now!'
+        camera_object.start_esti()
+        return 'Stretch now!', dash.no_update, dash.no_update
     else:
-        global once_flag2
-        if once_flag2:
-            camera_object.esti_flag = False
-            once_flag2 = False
-        return 'result:' + str(camera_object.get_judge())
+        camera_object.stop_esti()
+        camera_object.print_values()
+        if camera_object.get_judge():
+            return None, 'Clear!', back_button
+        else:
+            camera_object.clear_judge()
+            stretch_start_time = None
+            return None, 'Retry!', dash.no_update
 
     # if(interval_n <= 10):
     #     if interval_n == 10:
@@ -633,22 +563,6 @@ def a(interval_n):
     #     if interval_n == 21:
     #         camera_object.esti_flag = False
     #     return 'result:' + str(camera_object.get_judge())
-
-
-@ app.callback(Output('video_container2', 'children'),
-               Input('video_start_button', 'n_clicks'), Input('video_stop_button', 'n_clicks'), prevent_initial_call=True)
-def update_buttons(video_start_n, video_stop_n):
-    ctx = dash.callback_context
-    id = ctx.triggered[0]['prop_id'].split('.')[0]
-    global camera_object
-    if id == 'video_start_button':
-        if camera_object is None:
-            camera_object = VideoCamera()
-        camera_object.start_camera()
-        return html.Img(src="/video_feed", alt="video", width="auto", height="100%")
-    else:
-        camera_object.stop_camera()
-        return None
 
 
 if __name__ == '__main__':
