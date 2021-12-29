@@ -304,7 +304,7 @@ r_main_area =\
 show_image =\
     html.Div(
         children=[
-            html.Img(src=app.get_asset_url('Lenna.png'),
+            html.Img(src=app.get_asset_url('stretching.jpg'),
                      width="auto", height="100%")
         ], id='image_container'
     )
@@ -493,7 +493,7 @@ def check_alarm(interval_n):
             minutes, seconds = divmod(tminute, 60)
             return dash.no_update, '{0}days {1}:{2}:{3}'.format(date_diff.days, str(hours).zfill(2), str(minutes).zfill(2), str(seconds).zfill(2))
         else:
-            return stop_button, 'Alarming'
+            return stop_button, html.Div(children=[html.Audio(html.Source(src=f"https://www.ne.jp/asahi/music/myuu/wave/loop1.wav",type="audio/wav"), autoPlay=True, loop=True, preload='auto')])
 
 
 @ app.callback(Output('s_msg1', 'children'),
