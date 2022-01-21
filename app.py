@@ -206,20 +206,20 @@ class VideoCamera(object):
 
     # 姿勢推定の結果がgoodかどうかを判定するメソッド
     def is_good_judgement(self):
-        global Fl
-        if Fl is False:
-            return False
-        else:
-            return True
-        # print(self.good_esti_frames)
-        # print(self.esti_frames)
-        # if self.esti_frames == 0:
+        # global Fl
+        # if Fl is False:
         #     return False
         # else:
-        #     for i in range(0, 6):
-        #         if (self.good_esti_frames[i]/self.esti_frames)*100 < 60:
-        #             return False
         #     return True
+        print(self.good_esti_frames)
+        print(self.esti_frames)
+        if self.esti_frames == 0:
+            return False
+        else:
+            for i in range(0, 6):
+                if (self.good_esti_frames[i]/self.esti_frames)*100 < 60:
+                    return False
+            return True
 
 
 server = Flask(__name__)
@@ -309,8 +309,6 @@ cancel_button = dbc.Button("Cancel",
 # ルートに戻るボタン
 back_button = dbc.Button("back",
                          color="danger", className="d-grid gap-2 col-6 mx-auto", id='back_button', href='/')
-
-F = False
 
 # ルート画面のメイン領域(長いため分離)
 r_main_area =\
@@ -580,8 +578,8 @@ def check_stretch(interval_n):
                 camera_object.clear_esti_variable()
                 stretch_start_time = None
                 isRinging = True
-                global Fl
-                Fl = True
+                # global Fl
+                # Fl = True
                 return 'You failed', html.Audio(html.Source(src=f"https://www.ne.jp/asahi/music/myuu/wave/loop1.wav", type="audio/wav"), autoPlay=True, loop=True, preload='auto'), stop_button2
 
 
